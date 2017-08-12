@@ -16,7 +16,19 @@ public class UserResource {
     @Autowired
     private UserRepository userRepository;
 
-    @GET
+    @PUT
+    @Path("/validateUser/{userName}.{password}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response validate(@PathParam("userName") String userName, @PathParam("password") String password) {
+        List<User> userList = userRepository.findByUserNameAndPassword(userName, password);
+        if (userList.size() != 1) {
+            return Response.status(500).entity("Could not find user").build();
+        } else {
+            return Response.status(200).build();
+        }
+    }
+
+    @PUT
     @Path("/createUser/{userName}/{password}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response create(@PathParam("userName") String userName, @PathParam("password") String password) {
@@ -29,10 +41,10 @@ public class UserResource {
         return Response.status(200).entity(userRepository.findByUserNameAndPassword(userName, password)).build();
     }
 
-    @DELETE //TODO check why it's not allowed
+    @DELETE
     @Path("/deleteUser/{userId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response delete(@PathParam("userId")long id) {
+    public Response delete(@PathParam("userId") long id) {
         try {
             User user = userRepository.findByUserId(id);
             userRepository.delete(user);
@@ -43,9 +55,9 @@ public class UserResource {
     }
 
     @GET
-    @Path("/findUser/{userId}")
+    @Path("/findUserById/{userId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getById(@PathParam("userId")long id) {
+    public Response findUserById(@PathParam("userId") long id) {
         User user;
         try {
             user = userRepository.findByUserId(id);
@@ -55,10 +67,10 @@ public class UserResource {
         return Response.ok(user).build();
     }
 
-    @POST //TODO check why it's not allowed
-    @Path("/updateUser/{userName}/{password}")
+    @POST
+    @Path("/updateUserPassword/{userName}/{password}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response updateUser(@PathParam("userName") String userName, @PathParam("password") String password) {
+    public Response updateUserPassword(@PathParam("userName") String userName, @PathParam("password") String password) {
         User user = new User(userName, password);
         try {
             List<User> users = userRepository.findByUserNameAndPassword(userName, password);
