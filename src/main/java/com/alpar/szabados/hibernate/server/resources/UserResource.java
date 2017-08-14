@@ -24,21 +24,21 @@ public class UserResource {
         if (userList.size() != 1) {
             return Response.status(500).entity("Could not find user").build();
         } else {
-            return Response.status(200).build();
+            return Response.status(200).entity(userList.get(0)).build();
         }
     }
 
     @PUT
-    @Path("/createUser/{userName}/{password}")
+    @Path("/createUser/{userName}.{password}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response create(@PathParam("userName") String userName, @PathParam("password") String password) {
+        User user = new User(userName, password);
         try {
-            User user = new User(userName, password);
             userRepository.save(user);
         } catch (Exception e) {
             return Response.status(500).entity("Error creating user" + e.toString()).build();
         }
-        return Response.status(200).entity(userRepository.findByUserNameAndPassword(userName, password)).build();
+        return Response.status(200).entity(user).build();
     }
 
     @DELETE
@@ -67,8 +67,21 @@ public class UserResource {
         return Response.ok(user).build();
     }
 
+    @GET
+    @Path("/findUserByName/{userName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response findUserById(@PathParam("userName") String userName) {
+        User user;
+        try {
+            user = userRepository.findUserByUserName(userName);
+        } catch (Exception e) {
+            return Response.status(500).entity("User not found: " + e.toString()).build();
+        }
+        return Response.status(200).entity(user).build();
+    }
+
     @POST
-    @Path("/updateUserPassword/{userName}/{password}")
+    @Path("/updateUserPassword/{userName}.{password}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response updateUserPassword(@PathParam("userName") String userName, @PathParam("password") String password) {
         User user = new User(userName, password);
