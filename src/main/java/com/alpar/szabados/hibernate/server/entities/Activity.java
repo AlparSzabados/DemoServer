@@ -1,7 +1,6 @@
 package com.alpar.szabados.hibernate.server.entities;
 
 import javax.persistence.*;
-import java.time.LocalDate;
 
 @Entity
 @Table(name = "activity")
@@ -11,19 +10,19 @@ public class Activity {
     @Column(name = "activity_id", nullable = false, unique = true)
     private long activityId;
 
-    @Column(name = "user_id", nullable = false, unique = true)
+    @Column(name = "user_id", nullable = false)
     private long userId;
 
     @Column(name = "activity_name")
     private String activityName;
 
     @Column(name = "activity_date")
-    private LocalDate activityDate;
+    private String activityDate;
 
     @Column(name = "task_status")
     private TaskStatus taskStatus;
 
-    public Activity(Long userId, String activityName, LocalDate activityDate, TaskStatus taskStatus) {
+    public Activity(Long userId, String activityName, String activityDate, TaskStatus taskStatus) {
         this.userId = userId;
         this.activityName = activityName;
         this.activityDate = activityDate;
@@ -57,11 +56,11 @@ public class Activity {
         this.activityName = activityName;
     }
 
-    public LocalDate getActivityDate() {
+    public String getActivityDate() {
         return activityDate;
     }
 
-    public void setActivityDate(LocalDate activityDate) {
+    public void setActivityDate(String activityDate) {
         this.activityDate = activityDate;
     }
 
