@@ -1,6 +1,6 @@
 package com.alpar.szabados.hibernate.server;
 
-import com.alpar.szabados.hibernate.server.resources.HelloWorldEndpoint;
+import com.alpar.szabados.hibernate.server.resources.ActivityResource;
 import com.alpar.szabados.hibernate.server.resources.UserResource;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.stereotype.Component;
@@ -14,6 +14,6 @@ public class JerseyConfig extends ResourceConfig {
 
     private void registerEndpoints() {
         register(UserResource.class);
-        register(HelloWorldEndpoint.class);
+        register(ActivityResource.class);
     }
 }
