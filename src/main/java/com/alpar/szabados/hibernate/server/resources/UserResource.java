@@ -16,7 +16,7 @@ public class UserResource {
     @Autowired
     private UserRepository userRepository;
 
-    @PUT
+    @GET
     @Path("/validateUser/{userName}.{password}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response validate(@PathParam("userName") String userName, @PathParam("password") String password) {
