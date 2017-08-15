@@ -8,15 +8,14 @@ import com.alpar.szabados.hibernate.server.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import static com.alpar.szabados.hibernate.server.entities.TaskStatus.COMPLETED;
 
 @Component
 @Path("/activity")
@@ -27,7 +26,7 @@ public class ActivityResource {
     @Autowired
     private UserRepository userRepository;
 
-    @PUT
+    @GET
     @Path("/findActivities/{userName}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response findActivities(@PathParam("userName") String userName) {
@@ -59,63 +58,23 @@ public class ActivityResource {
         return Response.status(200).entity(activityRepository.findActivitiesByUserId(user.getUserId())).build();
     }
 
-//    @DELETE
-//    @Path("/deleteUser/{userId}")
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response delete(@PathParam("userId") long id) {
-//        try {
-//            User user = activityRepository.findByUserId(id);
-//            activityRepository.delete(user);
-//        } catch (Exception e) {
-//            return Response.status(500).entity("Error deleting the user: " + e.toString()).build();
-//        }
-//        return Response.ok().build();
-//    }
-
-//    @GET
-//    @Path("/findUserById/{userId}")
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response findUserById(@PathParam("userId") long id) {
-//        User user;
-//        try {
-//            user = activityRepository.findByUserId(id);
-//        } catch (Exception e) {
-//            return Response.status(500).entity("User not found: " + e.toString()).build();
-//        }
-//        return Response.ok(user).build();
-//    }
-
-//    @GET
-//    @Path("/findUserByName/{userName}")
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response findUserById(@PathParam("userName") String userName) {
-//        User user;
-//        try {
-//            user = activityRepository.findUserByUserName(userName);
-//        } catch (Exception e) {
-//            return Response.status(500).entity("User not found: " + e.toString()).build();
-//        }
-//        return Response.status(200).entity(user).build();
-//    }
-
-//    @POST
-//    @Path("/updateUserPassword/{userName}.{password}")
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response updateUserPassword(@PathParam("userName") String userName, @PathParam("password") String password) {
-//        User user = new User(userName, password);
-//        try {
-//            List<User> users = activityRepository.findByUserNameAndPassword(userName, password);
-//            if (users.size() == 1) {
-//                User user1 = users.get(0);
-//                long userId = user1.getUserId();
-//                activityRepository.findByUserId(userId).setPassword(userName);
-//                activityRepository.findByUserId(userId).setPassword(password);
-//            } else {
-//                activityRepository.save(user);
-//            }
-//        } catch (Exception e) {
-//            return Response.status(500).entity("Error updating the user: " + e.toString()).build();
-//        }
-//        return Response.ok().build();
-//    }
+    @POST
+    @Path("/completeTask/{activity}.{userName}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response completeTask(@PathParam("activity") String activityName, @PathParam("userName") String userName) {
+        User user = userRepository.findUserByUserName(userName);
+        try {
+            Activity activity = activityRepository.findActivityByActivityNameAndUserId(activityName, user.getUserId());
+            Activity activity1 = new Activity();
+            activity1.setUserId(activity.getUserId());
+            activity1.setActivityName(activity.getActivityName());
+            activity1.setActivityDate(activity.getActivityDate());
+            activity1.setId(activity.getId());
+            activity1.setTaskStatus(COMPLETED);
+            activityRepository.save(activity1);
+        } catch (Exception e) {
+            return Response.status(500).entity("Error updating the activity: " + e.toString()).build();
+        }
+        return Response.ok().build();
+    }
 }
