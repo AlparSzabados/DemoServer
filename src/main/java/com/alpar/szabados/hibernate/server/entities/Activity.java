@@ -1,6 +1,7 @@
 package com.alpar.szabados.hibernate.server.entities;
 
 import javax.persistence.*;
+import java.util.Objects;
 
 @Entity
 @Table(name = "activity")
@@ -75,5 +76,19 @@ public class Activity {
     @Override
     public String toString() {
         return String.format("Activity{activityId=%d, userId=%d, activityName='%s', activityDate=%s, taskStatus=%s}", activityId, userId, activityName, activityDate, taskStatus);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Activity activity = (Activity) o;
+        return userId == activity.userId &&
+                Objects.equals(activityName, activity.activityName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userId, activityName);
     }
 }
