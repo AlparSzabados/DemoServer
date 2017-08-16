@@ -46,9 +46,9 @@ public class ActivityResource {
     @Path("/createActivity/{activityName}.{taskStatus}.{userName}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response createActivity(@PathParam("activityName") String activityName, @PathParam("taskStatus") TaskStatus taskStatus, @PathParam("userName") String userName) {
-        User user = userRepository.findUserByUserName(userName);
-        String localDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // TODO extract
         try {
+            User user = userRepository.findUserByUserName(userName);
+            String localDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // TODO extract
             Activity activity = activityRepository.findActivityByActivityNameAndUserIdAndActivityDate(activityName, user.getUserId(), localDate);
             if (activity == null) {
                 Activity newActivity = new Activity();
@@ -57,22 +57,22 @@ public class ActivityResource {
                 newActivity.setTaskStatus(taskStatus);
                 newActivity.setUserId(user.getUserId());
                 activityRepository.save(newActivity);
+                return Response.status(200).entity(activityRepository.findActivitiesByUserId(user.getUserId())).build();
             } else {
                 return Response.status(200).entity("Activity already created").build();
             }
         } catch (Exception e) {
             return Response.status(500).entity("Error creating activity" + e.toString()).build();
         }
-        return Response.status(200).entity(activityRepository.findActivitiesByUserId(user.getUserId())).build();
     }
 
     @POST
     @Path("/completeTask/{activity}.{userName}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response completeTask(@PathParam("activity") String activityName, @PathParam("userName") String userName) {
-        User user = userRepository.findUserByUserName(userName);
-        String localDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         try {
+            User user = userRepository.findUserByUserName(userName);
+            String localDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             Activity activity = activityRepository.findActivityByActivityNameAndUserIdAndActivityDate(activityName, user.getUserId(), localDate);
             if (activity == null) {
                 Activity newActivity = new Activity();
@@ -85,9 +85,9 @@ public class ActivityResource {
                 activity.setTaskStatus(COMPLETED);
                 activityRepository.save(activity);
             }
+            return Response.status(200).build();
         } catch (Exception e) {
             return Response.status(500).entity("Error updating the activity: " + e.toString()).build();
         }
-        return Response.status(200).build();
     }
 }
