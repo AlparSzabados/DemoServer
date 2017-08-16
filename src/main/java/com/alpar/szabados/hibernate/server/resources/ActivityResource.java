@@ -12,10 +12,10 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static com.alpar.szabados.hibernate.server.entities.TaskStatus.COMPLETED;
+import static java.time.format.DateTimeFormatter.ISO_DATE;
 
 @Component
 @Path("/activity")
@@ -48,7 +48,7 @@ public class ActivityResource {
     public Response createActivity(@PathParam("activityName") String activityName, @PathParam("taskStatus") TaskStatus taskStatus, @PathParam("userName") String userName) {
         try {
             User user = userRepository.findUserByUserName(userName);
-            String localDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // TODO extract
+            String localDate = LocalDateTime.now().format(ISO_DATE);
             Activity activity = activityRepository.findActivityByActivityNameAndUserIdAndActivityDate(activityName, user.getUserId(), localDate);
             if (activity == null) {
                 Activity newActivity = new Activity();
@@ -71,23 +71,27 @@ public class ActivityResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response completeTask(@PathParam("activity") String activityName, @PathParam("userName") String userName) {
         try {
+            LocalDateTime now = LocalDateTime.now();
             User user = userRepository.findUserByUserName(userName);
-            String localDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            Activity activity = activityRepository.findActivityByActivityNameAndUserIdAndActivityDate(activityName, user.getUserId(), localDate);
-            if (activity == null) {
-                Activity newActivity = new Activity();
-                newActivity.setActivityName(activityName);
-                newActivity.setUserId(user.getUserId());
-                newActivity.setActivityDate(localDate);
-                newActivity.setTaskStatus(COMPLETED);
-                activityRepository.save(newActivity);
-            } else {
-                activity.setTaskStatus(COMPLETED);
-                activityRepository.save(activity);
-            }
-            return Response.ok().build();
+
+            Activity activity = getActivity(activityName, user, now);
+            activity.setTaskStatus(COMPLETED);
+            activityRepository.save(activity);
         } catch (RuntimeException e) {
             return Response.serverError().entity("Error updating the activity: " + e).build();
         }
+        return Response.ok().build();
+    }
+
+    private Activity getActivity(String activityName, User user, LocalDateTime now) {
+        String formattedDateTime = now.format(ISO_DATE);
+        Activity activity = activityRepository.findActivityByActivityNameAndUserIdAndActivityDate(activityName, user.getUserId(), formattedDateTime);
+        if (activity == null) {
+            activity = new Activity();
+            activity.setActivityName(activityName);
+            activity.setUserId(user.getUserId());
+            activity.setActivityDate(formattedDateTime);
+        }
+        return activity;
     }
 }
