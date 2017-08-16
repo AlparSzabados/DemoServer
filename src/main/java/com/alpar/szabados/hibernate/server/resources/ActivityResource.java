@@ -21,7 +21,6 @@ import static com.alpar.szabados.hibernate.server.entities.TaskStatus.COMPLETED;
 @Component
 @Path("/activity")
 public class ActivityResource {
-    public static final String localDate = "2017-07-16";
     @Autowired
     private ActivityRepository activityRepository;
 
@@ -46,7 +45,7 @@ public class ActivityResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response createActivity(@PathParam("activityName") String activityName, @PathParam("taskStatus") TaskStatus taskStatus, @PathParam("userName") String userName) {
         User user = userRepository.findUserByUserName(userName);
-//        String localDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String localDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         try {
             Activity activity = activityRepository.findActivityByActivityNameAndUserIdAndActivityDate(activityName, user.getUserId(), localDate);
             if (activity == null) {
@@ -70,7 +69,7 @@ public class ActivityResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response completeTask(@PathParam("activity") String activityName, @PathParam("userName") String userName) {
         User user = userRepository.findUserByUserName(userName);
-//        String localDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String localDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         try {
             Activity activity = activityRepository.findActivityByActivityNameAndUserIdAndActivityDate(activityName, user.getUserId(), localDate);
             if (activity == null) {
@@ -87,6 +86,6 @@ public class ActivityResource {
         } catch (Exception e) {
             return Response.status(500).entity("Error updating the activity: " + e.toString()).build();
         }
-        return Response.ok().build();
+        return Response.status(200).build();
     }
 }
