@@ -35,7 +35,7 @@ public class ActivityResource {
     public Response findActivities(@PathParam("userName") String userName) {
         User user = userRepository.findUserByUserName(userName);
         List<Activity> activityList = activityRepository.findActivitiesByUserId(user.getUserId());
-        if (activityList.size() == 0) {
+        if (activityList.isEmpty()) {
             return Response.serverError().entity("Could not find user").build();
         } else {
             return Response.ok().entity(activityList).build();
@@ -61,8 +61,8 @@ public class ActivityResource {
             } else {
                 return Response.ok().entity("Activity already created").build();
             }
-        } catch (Exception e) {
-            return Response.serverError().entity("Error creating activity" + e.toString()).build();
+        } catch (RuntimeException e) {
+            return Response.serverError().entity("Error creating activity" + e).build();
         }
     }
 
@@ -86,8 +86,8 @@ public class ActivityResource {
                 activityRepository.save(activity);
             }
             return Response.ok().build();
-        } catch (Exception e) {
-            return Response.serverError().entity("Error updating the activity: " + e.toString()).build();
+        } catch (RuntimeException e) {
+            return Response.serverError().entity("Error updating the activity: " + e).build();
         }
     }
 }

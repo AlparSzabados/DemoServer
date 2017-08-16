@@ -40,8 +40,8 @@ public class UserResource {
             User user = new User(userName, password);
             userRepository.save(user);
             return Response.ok().entity(user).build();
-        } catch (Exception e) {
-            return Response.serverError().entity("Error creating user" + e.toString()).build();
+        } catch (RuntimeException e) {
+            return Response.serverError().entity("Error creating user" + e).build();
         }
     }
 
@@ -53,8 +53,8 @@ public class UserResource {
             User user = userRepository.findByUserId(id);
             userRepository.delete(user);
             return Response.ok().build();
-        } catch (Exception e) {
-            return Response.serverError().entity("Error deleting the user: " + e.toString()).build();
+        } catch (RuntimeException e) {
+            return Response.serverError().entity("Error deleting the user: " + e).build();
         }
     }
 
@@ -65,8 +65,8 @@ public class UserResource {
         try {
             User user = userRepository.findByUserId(id);
             return Response.ok(user).build();
-        } catch (Exception e) {
-            return Response.serverError().entity("User not found: " + e.toString()).build();
+        } catch (RuntimeException e) {
+            return Response.serverError().entity("User not found: " + e).build();
         }
     }
 
@@ -77,8 +77,8 @@ public class UserResource {
         try {
             User user = userRepository.findUserByUserName(userName);
             return Response.ok().entity(user).build();
-        } catch (Exception e) {
-            return Response.serverError().entity("User not found: " + e.toString()).build();
+        } catch (RuntimeException e) {
+            return Response.serverError().entity("User not found: " + e).build();
         }
     }
 
@@ -98,8 +98,8 @@ public class UserResource {
                 userRepository.save(user);
             }
             return Response.ok().build();
-        } catch (Exception e) {
-            return Response.serverError().entity("Error updating the user: " + e.toString()).build();
+        } catch (RuntimeException e) {
+            return Response.serverError().entity("Error updating the user: " + e).build();
         }
     }
 }
