@@ -14,12 +14,14 @@ import javax.ws.rs.core.Response;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 
 import static com.alpar.szabados.hibernate.server.entities.TaskStatus.COMPLETED;
 
 @Component
 @Path("/activity")
 public class ActivityResource {
+    public static final String localDate = "2017-07-16";
     @Autowired
     private ActivityRepository activityRepository;
 
@@ -44,16 +46,21 @@ public class ActivityResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response createActivity(@PathParam("activityName") String activityName, @PathParam("taskStatus") TaskStatus taskStatus, @PathParam("userName") String userName) {
         User user = userRepository.findUserByUserName(userName);
-        String localDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+//        String localDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         try {
-            Activity activity = new Activity();
-            activity.setActivityDate(localDate);
-            activity.setActivityName(activityName);
-            activity.setTaskStatus(taskStatus);
-            activity.setUserId(user.getUserId());
-            activityRepository.save(activity);
+            Activity activity = activityRepository.findActivityByActivityNameAndUserIdAndActivityDate(activityName, user.getUserId(), localDate);
+            if (activity == null) {
+                Activity newActivity = new Activity();
+                newActivity.setActivityDate(localDate);
+                newActivity.setActivityName(activityName);
+                newActivity.setTaskStatus(taskStatus);
+                newActivity.setUserId(user.getUserId());
+                activityRepository.save(newActivity);
+            } else {
+                return Response.status(200).entity("Activity already created").build();
+            }
         } catch (Exception e) {
-            return Response.status(500).entity("Error creating user" + e.toString()).build();
+            return Response.status(500).entity("Error creating activity" + e.toString()).build();
         }
         return Response.status(200).entity(activityRepository.findActivitiesByUserId(user.getUserId())).build();
     }
@@ -63,15 +70,20 @@ public class ActivityResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response completeTask(@PathParam("activity") String activityName, @PathParam("userName") String userName) {
         User user = userRepository.findUserByUserName(userName);
+//        String localDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         try {
-            Activity activity = activityRepository.findActivityByActivityNameAndUserId(activityName, user.getUserId());
-            Activity activity1 = new Activity();
-            activity1.setUserId(activity.getUserId());
-            activity1.setActivityName(activity.getActivityName());
-            activity1.setActivityDate(activity.getActivityDate());
-            activity1.setId(activity.getId());
-            activity1.setTaskStatus(COMPLETED);
-            activityRepository.save(activity1);
+            Activity activity = activityRepository.findActivityByActivityNameAndUserIdAndActivityDate(activityName, user.getUserId(), localDate);
+            if (activity == null) {
+                Activity newActivity = new Activity();
+                newActivity.setActivityName(activityName);
+                newActivity.setUserId(user.getUserId());
+                newActivity.setActivityDate(localDate);
+                newActivity.setTaskStatus(COMPLETED);
+                activityRepository.save(newActivity);
+            } else {
+                activity.setTaskStatus(COMPLETED);
+                activityRepository.save(activity);
+            }
         } catch (Exception e) {
             return Response.status(500).entity("Error updating the activity: " + e.toString()).build();
         }
