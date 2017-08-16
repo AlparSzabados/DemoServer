@@ -84,7 +84,8 @@ public class Activity {
         if (o == null || getClass() != o.getClass()) return false;
         Activity activity = (Activity) o;
         return userId == activity.userId &&
-                Objects.equals(activityName, activity.activityName);
+                Objects.equals(activityName, activity.activityName) &&
+                Objects.equals(activityDate, activity.activityDate);
     }
 
     @Override
