@@ -25,10 +25,10 @@ public class UserResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response validate(@PathParam("userName") String userName, @PathParam("password") String password) {
         List<User> userList = userRepository.findByUserNameAndPassword(userName, password);
-        if (userList.size() != 1) {
-            return Response.serverError().entity("Could not find user").build();
-        } else {
+        if (userList.size() == 1) {
             return Response.ok(userList.get(0)).build();
+        } else {
+            return Response.serverError().entity("Could not find user").build();
         }
     }
 
@@ -90,9 +90,7 @@ public class UserResource {
             User user = new User(userName, password);
             List<User> users = userRepository.findByUserNameAndPassword(userName, password);
             if (users.size() == 1) {
-                User user1 = users.get(0);
-                long userId = user1.getUserId();
-                userRepository.findByUserId(userId).setPassword(userName);
+                long userId = users.get(0).getUserId();
                 userRepository.findByUserId(userId).setPassword(password);
             } else {
                 userRepository.save(user);
