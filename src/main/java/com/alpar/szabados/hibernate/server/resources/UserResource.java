@@ -13,8 +13,12 @@ import java.util.List;
 @Component
 @Path("/user")
 public class UserResource {
+    private final UserRepository userRepository;
+
     @Autowired
-    private UserRepository userRepository;
+    public UserResource(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @GET
     @Path("/validateUser/{userName}.{password}")

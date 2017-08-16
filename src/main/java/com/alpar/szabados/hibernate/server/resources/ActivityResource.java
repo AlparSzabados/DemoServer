@@ -14,18 +14,20 @@ import javax.ws.rs.core.Response;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Objects;
 
 import static com.alpar.szabados.hibernate.server.entities.TaskStatus.COMPLETED;
 
 @Component
 @Path("/activity")
 public class ActivityResource {
-    @Autowired
-    private ActivityRepository activityRepository;
+    private final ActivityRepository activityRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    public ActivityResource(ActivityRepository activityRepository, UserRepository userRepository) {
+        this.activityRepository = activityRepository;
+        this.userRepository = userRepository;
+    }
 
     @GET
     @Path("/findActivities/{userName}")
@@ -45,7 +47,7 @@ public class ActivityResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response createActivity(@PathParam("activityName") String activityName, @PathParam("taskStatus") TaskStatus taskStatus, @PathParam("userName") String userName) {
         User user = userRepository.findUserByUserName(userName);
-        String localDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String localDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")); // TODO extract
         try {
             Activity activity = activityRepository.findActivityByActivityNameAndUserIdAndActivityDate(activityName, user.getUserId(), localDate);
             if (activity == null) {
