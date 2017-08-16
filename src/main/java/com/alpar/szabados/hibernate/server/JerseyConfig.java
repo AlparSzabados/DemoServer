@@ -7,13 +7,14 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class JerseyConfig extends ResourceConfig {
-
     public JerseyConfig() {
         registerEndpoints();
     }
 
     private void registerEndpoints() {
-        register(UserResource.class);
-        register(ActivityResource.class);
+        registerClasses(
+                UserResource.class,
+                ActivityResource.class
+        );
     }
 }
