@@ -36,9 +36,9 @@ public class ActivityResource {
         User user = userRepository.findUserByUserName(userName);
         List<Activity> activityList = activityRepository.findActivitiesByUserId(user.getUserId());
         if (activityList.size() == 0) {
-            return Response.status(500).entity("Could not find user").build();
+            return Response.serverError().entity("Could not find user").build();
         } else {
-            return Response.status(200).entity(activityList).build();
+            return Response.ok().entity(activityList).build();
         }
     }
 
@@ -57,12 +57,12 @@ public class ActivityResource {
                 newActivity.setTaskStatus(taskStatus);
                 newActivity.setUserId(user.getUserId());
                 activityRepository.save(newActivity);
-                return Response.status(200).entity(activityRepository.findActivitiesByUserId(user.getUserId())).build();
+                return Response.ok().entity(activityRepository.findActivitiesByUserId(user.getUserId())).build();
             } else {
-                return Response.status(200).entity("Activity already created").build();
+                return Response.ok().entity("Activity already created").build();
             }
         } catch (Exception e) {
-            return Response.status(500).entity("Error creating activity" + e.toString()).build();
+            return Response.serverError().entity("Error creating activity" + e.toString()).build();
         }
     }
 
@@ -85,9 +85,9 @@ public class ActivityResource {
                 activity.setTaskStatus(COMPLETED);
                 activityRepository.save(activity);
             }
-            return Response.status(200).build();
+            return Response.ok().build();
         } catch (Exception e) {
-            return Response.status(500).entity("Error updating the activity: " + e.toString()).build();
+            return Response.serverError().entity("Error updating the activity: " + e.toString()).build();
         }
     }
 }

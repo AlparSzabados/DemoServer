@@ -26,9 +26,9 @@ public class UserResource {
     public Response validate(@PathParam("userName") String userName, @PathParam("password") String password) {
         List<User> userList = userRepository.findByUserNameAndPassword(userName, password);
         if (userList.size() != 1) {
-            return Response.status(500).entity("Could not find user").build();
+            return Response.serverError().entity("Could not find user").build();
         } else {
-            return Response.status(200).entity(userList.get(0)).build();
+            return Response.ok().entity(userList.get(0)).build();
         }
     }
 
@@ -39,9 +39,9 @@ public class UserResource {
         try {
             User user = new User(userName, password);
             userRepository.save(user);
-            return Response.status(200).entity(user).build();
+            return Response.ok().entity(user).build();
         } catch (Exception e) {
-            return Response.status(500).entity("Error creating user" + e.toString()).build();
+            return Response.serverError().entity("Error creating user" + e.toString()).build();
         }
     }
 
@@ -54,7 +54,7 @@ public class UserResource {
             userRepository.delete(user);
             return Response.ok().build();
         } catch (Exception e) {
-            return Response.status(500).entity("Error deleting the user: " + e.toString()).build();
+            return Response.serverError().entity("Error deleting the user: " + e.toString()).build();
         }
     }
 
@@ -66,7 +66,7 @@ public class UserResource {
             User user = userRepository.findByUserId(id);
             return Response.ok(user).build();
         } catch (Exception e) {
-            return Response.status(500).entity("User not found: " + e.toString()).build();
+            return Response.serverError().entity("User not found: " + e.toString()).build();
         }
     }
 
@@ -76,9 +76,9 @@ public class UserResource {
     public Response findUserById(@PathParam("userName") String userName) {
         try {
             User user = userRepository.findUserByUserName(userName);
-            return Response.status(200).entity(user).build();
+            return Response.ok().entity(user).build();
         } catch (Exception e) {
-            return Response.status(500).entity("User not found: " + e.toString()).build();
+            return Response.serverError().entity("User not found: " + e.toString()).build();
         }
     }
 
@@ -99,7 +99,7 @@ public class UserResource {
             }
             return Response.ok().build();
         } catch (Exception e) {
-            return Response.status(500).entity("Error updating the user: " + e.toString()).build();
+            return Response.serverError().entity("Error updating the user: " + e.toString()).build();
         }
     }
 }
