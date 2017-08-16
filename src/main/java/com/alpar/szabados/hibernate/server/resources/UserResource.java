@@ -28,7 +28,7 @@ public class UserResource {
         if (userList.size() != 1) {
             return Response.serverError().entity("Could not find user").build();
         } else {
-            return Response.ok().entity(userList.get(0)).build();
+            return Response.ok(userList.get(0)).build();
         }
     }
 
@@ -39,7 +39,7 @@ public class UserResource {
         try {
             User user = new User(userName, password);
             userRepository.save(user);
-            return Response.ok().entity(user).build();
+            return Response.ok(user).build();
         } catch (RuntimeException e) {
             return Response.serverError().entity("Error creating user" + e).build();
         }
@@ -76,7 +76,7 @@ public class UserResource {
     public Response findUserById(@PathParam("userName") String userName) {
         try {
             User user = userRepository.findUserByUserName(userName);
-            return Response.ok().entity(user).build();
+            return Response.ok(user).build();
         } catch (RuntimeException e) {
             return Response.serverError().entity("User not found: " + e).build();
         }

@@ -38,7 +38,7 @@ public class ActivityResource {
         if (activityList.isEmpty()) {
             return Response.serverError().entity("Could not find user").build();
         } else {
-            return Response.ok().entity(activityList).build();
+            return Response.ok(activityList).build();
         }
     }
 
@@ -57,9 +57,9 @@ public class ActivityResource {
                 newActivity.setTaskStatus(taskStatus);
                 newActivity.setUserId(user.getUserId());
                 activityRepository.save(newActivity);
-                return Response.ok().entity(activityRepository.findActivitiesByUserId(user.getUserId())).build();
+                return Response.ok(activityRepository.findActivitiesByUserId(user.getUserId())).build();
             } else {
-                return Response.ok().entity("Activity already created").build();
+                return Response.ok("Activity already created").build();
             }
         } catch (RuntimeException e) {
             return Response.serverError().entity("Error creating activity" + e).build();
