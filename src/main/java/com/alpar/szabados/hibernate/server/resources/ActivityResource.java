@@ -1,7 +1,6 @@
 package com.alpar.szabados.hibernate.server.resources;
 
 import com.alpar.szabados.hibernate.server.entities.Activity;
-import com.alpar.szabados.hibernate.server.entities.User;
 import com.alpar.szabados.hibernate.server.repositories.ActivityRepository;
 import com.alpar.szabados.hibernate.server.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +15,7 @@ import java.util.List;
 import static com.alpar.szabados.hibernate.server.entities.TaskStatus.COMPLETED;
 import static com.alpar.szabados.hibernate.server.entities.TaskStatus.NOT_COMPLETED;
 import static java.time.format.DateTimeFormatter.ISO_DATE;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 
 @Component
 @Path("/activity")
@@ -35,12 +35,16 @@ public class ActivityResource {
     @Path("/findActivities/{userName}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response findActivities(@PathParam("userName") String userName) {
-        User user = userRepository.findUserByUserName(userName);
-        List<Activity> activityList = activityRepository.findActivitiesByUserId(user.getUserId());
-        if (activityList.isEmpty()) {
-            return Response.serverError().entity("Could not find user").build();
-        } else {
-            return Response.ok(activityList).build();
+        try {
+            long userId = userRepository.findUserByUserName(userName).getUserId();
+            List<Activity> activityList = activityRepository.findActivitiesByUserId(userId);
+            if (activityList.isEmpty()) {
+                return Response.status(BAD_REQUEST).entity("Could not find any activities").build();
+            } else {
+                return Response.ok(activityList).build();
+            }
+        } catch (RuntimeException e) {
+            return Response.serverError().entity("Error occurred" + e).build();
         }
     }
 
