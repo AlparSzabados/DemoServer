@@ -32,11 +32,7 @@ public class UserResourceTest {
         dummyUser.setUserName("Dummy");
         dummyUser.setPassword("Password");
 
-        try {
-            userRepository.save(dummyUser);
-        } catch (RuntimeException e) {
-            System.out.println("An exception occurred " + e);
-        }
+        userRepository.save(dummyUser);
     }
 
     @Test
