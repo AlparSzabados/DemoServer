@@ -12,3 +12,7 @@ addons:
     - mysql-server-5.6
     - mysql-client-core-5.6
     - mysql-client-5.6
+
+before_script:
+- mysql -u root -e 'CREATE DATABASE demo_db;'
+- mysql -u root -e "GRANT ALL ON demo_db.* TO 'root'@'localhost';"
