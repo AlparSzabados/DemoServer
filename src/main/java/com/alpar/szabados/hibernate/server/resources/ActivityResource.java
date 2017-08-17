@@ -1,6 +1,7 @@
 package com.alpar.szabados.hibernate.server.resources;
 
 import com.alpar.szabados.hibernate.server.entities.Activity;
+import com.alpar.szabados.hibernate.server.entities.TaskStatus;
 import com.alpar.szabados.hibernate.server.repositories.ActivityRepository;
 import com.alpar.szabados.hibernate.server.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,37 +55,36 @@ public class ActivityResource {
     public Response createActivity(@PathParam("activityName") String activityName, @PathParam("userName") String userName) {
         try {
             long userId = userRepository.findUserByUserName(userName).getUserId();
-            Activity activity = getActivity(activityName, userId);
-            activity.setTaskStatus(NOT_COMPLETED);
+            Activity activity = getActivity(activityName, userId, NOT_COMPLETED);
             activityRepository.save(activity);
+            return Response.ok().build();
         } catch (RuntimeException e) {
             return Response.serverError().entity("Error creating activity" + e).build();
         }
-        return Response.ok().build();
     }
 
     @POST
-    @Path("/completeTask/{activity}.{userName}")
+    @Path("/completeTask/{activityName}.{userName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response completeTask(@PathParam("activity") String activityName, @PathParam("userName") String userName) {
+    public Response completeTask(@PathParam("activityName") String activityName, @PathParam("userName") String userName) {
         try {
             long userId = userRepository.findUserByUserName(userName).getUserId();
-            Activity activity = getActivity(activityName, userId);
-            activity.setTaskStatus(COMPLETED);
+            Activity activity = getActivity(activityName, userId, COMPLETED);
             activityRepository.save(activity);
+            return Response.ok().build();
         } catch (RuntimeException e) {
             return Response.serverError().entity("Error updating the activity: " + e).build();
         }
-        return Response.ok().build();
     }
 
-    private Activity getActivity(String activityName, long userId) {
+    private Activity getActivity(String activityName, long userId, TaskStatus taskStatus) {
         Activity activity = activityRepository.findActivityByActivityNameAndUserIdAndActivityDate(activityName, userId, now);
         if (activity == null) {
             activity = new Activity();
             activity.setActivityName(activityName);
             activity.setUserId(userId);
             activity.setActivityDate(now);
+            activity.setTaskStatus(taskStatus);
         }
         return activity;
     }
