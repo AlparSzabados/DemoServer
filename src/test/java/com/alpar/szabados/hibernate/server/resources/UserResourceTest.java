@@ -53,7 +53,7 @@ public class UserResourceTest {
 
     @Test
     public void create() throws Exception {
-        Response createResponse = userResource.create("Dummy1", "Password");
+        Response createResponse = userResource.create("John_Doe", "Password");
         assertEquals(200, createResponse.getStatus());
 
         Response duplicateResponse = userResource.create(dummyUser.getUserName(), dummyUser.getPassword());
