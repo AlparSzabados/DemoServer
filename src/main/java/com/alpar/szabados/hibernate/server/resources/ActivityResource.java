@@ -1,7 +1,6 @@
 package com.alpar.szabados.hibernate.server.resources;
 
 import com.alpar.szabados.hibernate.server.entities.Activity;
-import com.alpar.szabados.hibernate.server.entities.TaskStatus;
 import com.alpar.szabados.hibernate.server.entities.User;
 import com.alpar.szabados.hibernate.server.repositories.ActivityRepository;
 import com.alpar.szabados.hibernate.server.repositories.UserRepository;
@@ -15,12 +14,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.alpar.szabados.hibernate.server.entities.TaskStatus.COMPLETED;
+import static com.alpar.szabados.hibernate.server.entities.TaskStatus.NOT_COMPLETED;
 import static java.time.format.DateTimeFormatter.ISO_DATE;
 
 @Component
 @Path("/activity")
 public class ActivityResource {
     private final String now = LocalDateTime.now().format(ISO_DATE);
+
     private final ActivityRepository activityRepository;
     private final UserRepository userRepository;
 
@@ -44,26 +45,18 @@ public class ActivityResource {
     }
 
     @PUT
-    @Path("/createActivity/{activityName}.{taskStatus}.{userName}")
+    @Path("/createActivity/{activityName}.{userName}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response createActivity(@PathParam("activityName") String activityName, @PathParam("taskStatus") TaskStatus taskStatus, @PathParam("userName") String userName) {
+    public Response createActivity(@PathParam("activityName") String activityName, @PathParam("userName") String userName) {
         try {
-            User user = userRepository.findUserByUserName(userName);
-            Activity activity = activityRepository.findActivityByActivityNameAndUserIdAndActivityDate(activityName, user.getUserId(), now);
-            if (activity == null) {
-                Activity newActivity = new Activity();
-                newActivity.setActivityDate(now);
-                newActivity.setActivityName(activityName);
-                newActivity.setTaskStatus(taskStatus);
-                newActivity.setUserId(user.getUserId());
-                activityRepository.save(newActivity);
-                return Response.ok(activityRepository.findActivitiesByUserId(user.getUserId())).build();
-            } else {
-                return Response.ok("Activity already created").build();
-            }
+            long userId = userRepository.findUserByUserName(userName).getUserId();
+            Activity activity = getActivity(activityName, userId);
+            activity.setTaskStatus(NOT_COMPLETED);
+            activityRepository.save(activity);
         } catch (RuntimeException e) {
             return Response.serverError().entity("Error creating activity" + e).build();
         }
+        return Response.ok().build();
     }
 
     @POST
@@ -71,9 +64,8 @@ public class ActivityResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response completeTask(@PathParam("activity") String activityName, @PathParam("userName") String userName) {
         try {
-            User user = userRepository.findUserByUserName(userName);
-
-            Activity activity = getActivity(activityName, user);
+            long userId = userRepository.findUserByUserName(userName).getUserId();
+            Activity activity = getActivity(activityName, userId);
             activity.setTaskStatus(COMPLETED);
             activityRepository.save(activity);
         } catch (RuntimeException e) {
@@ -82,12 +74,12 @@ public class ActivityResource {
         return Response.ok().build();
     }
 
-    private Activity getActivity(String activityName, User user) {
-        Activity activity = activityRepository.findActivityByActivityNameAndUserIdAndActivityDate(activityName, user.getUserId(), now);
+    private Activity getActivity(String activityName, long userId) {
+        Activity activity = activityRepository.findActivityByActivityNameAndUserIdAndActivityDate(activityName, userId, now);
         if (activity == null) {
             activity = new Activity();
             activity.setActivityName(activityName);
-            activity.setUserId(user.getUserId());
+            activity.setUserId(userId);
             activity.setActivityDate(now);
         }
         return activity;
