@@ -14,6 +14,6 @@ addons:
     - mysql-client-5.6
 
 before_script:
-- mysql -u root -e "CREATE DATABASE 'demo_db';"
+- mysql -u root -e "CREATE DATABASE demo_db;"
 - mysql -u root -e "CREATE USER 'travis'@'localhost' IDENTIFIED BY 'travis';"
 - mysql -u root -e "GRANT ALL ON demo_db.* TO 'travis'@'localhost';"
