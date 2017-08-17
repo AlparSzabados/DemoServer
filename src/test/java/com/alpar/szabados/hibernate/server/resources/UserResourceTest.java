@@ -40,7 +40,7 @@ public class UserResourceTest {
     }
 
     @Test
-    public void validate() throws Exception {
+    public void validate() {
         Response validResponse = userResource.validate(dummyUser.getUserName(), dummyUser.getPassword());
         assertEquals(200, validResponse.getStatus());
 
@@ -52,7 +52,7 @@ public class UserResourceTest {
     }
 
     @Test
-    public void create() throws Exception {
+    public void create() {
         Response createResponse = userResource.create("John_Doe", "Password");
         assertEquals(200, createResponse.getStatus());
 
@@ -61,7 +61,7 @@ public class UserResourceTest {
     }
 
     @Test
-    public void delete() throws Exception {
+    public void delete() {
         Response deleteResponse = userResource.delete(dummyUser.getUserId());
         assertEquals(200, deleteResponse.getStatus());
 
@@ -70,7 +70,7 @@ public class UserResourceTest {
     }
 
     @Test
-    public void findUserByName() throws Exception {
+    public void findUserByName() {
         Response foundRequest = userResource.findUserByName(dummyUser.getUserName());
         assertEquals(200, foundRequest.getStatus());
 
@@ -79,7 +79,7 @@ public class UserResourceTest {
     }
 
     @Test
-    public void updateUserPassword() throws Exception {
+    public void updateUserPassword() {
         Response updatePasswordResponse = userResource.updateUserPassword(dummyUser.getUserName(), "12345");
         assertEquals(200, updatePasswordResponse.getStatus());
         assertEquals("12345", ((User) updatePasswordResponse.getEntity()).getPassword());
