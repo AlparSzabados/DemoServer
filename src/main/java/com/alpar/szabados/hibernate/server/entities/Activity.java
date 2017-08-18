@@ -1,11 +1,14 @@
 package com.alpar.szabados.hibernate.server.entities;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.Objects;
 
 @Entity
 @Table(name = "activity")
-public class Activity {
+public class Activity implements Serializable{
+
+    private static final long serialVersionUID = 6812998521796773053L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "activity_id", nullable = false, unique = true)
