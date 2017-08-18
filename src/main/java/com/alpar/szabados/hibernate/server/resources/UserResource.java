@@ -3,6 +3,7 @@ package com.alpar.szabados.hibernate.server.resources;
 import com.alpar.szabados.hibernate.server.entities.User;
 import com.alpar.szabados.hibernate.server.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.*;
@@ -16,19 +17,22 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 @Path("/user")
 public class UserResource {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserResource(UserRepository userRepository) {
+    public UserResource(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    @GET
-    @Path("/validateUser/{userName}.{password}")
+    @POST
+    @Path("/validateUser/")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response validate(@PathParam("userName") String userName, @PathParam("password") String password) {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response validate(User response) {
         try {
-            User user = userRepository.findByUserName(userName);
-            if (Objects.equals(user.getUserName(), userName) && Objects.equals(user.getPassword(), password)) {
+            User user = userRepository.findByUserName(response.getUserName());
+            if (isValid(response, user)) {
                 return Response.ok(user).build();
             } else {
                 return Response.status(BAD_REQUEST).entity("Wrong password").build();
@@ -38,14 +42,20 @@ public class UserResource {
         }
     }
 
+    private boolean isValid(User response, User user) {
+        return Objects.equals(user.getUserName(), response.getUserName())
+                && passwordEncoder.matches(response.getEncodedPassword(), user.getEncodedPassword());
+    }
+
     @PUT
-    @Path("/createUser/{userName}.{password}")
+    @Path("/createUser/")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response create(@PathParam("userName") String userName, @PathParam("password") String password) {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response create(User response) {
         try {
-            User existingUser = userRepository.findUserByUserName(userName);
+            User existingUser = userRepository.findUserByUserName(response.getUserName());
             if (existingUser == null) {
-                User newUser = new User(userName, password);
+                User newUser = new User(response.getUserName(), passwordEncoder.encode(response.getEncodedPassword()));
                 userRepository.save(newUser);
                 return Response.ok(newUser).build();
             } else {
@@ -57,15 +67,16 @@ public class UserResource {
     }
 
     @DELETE
-    @Path("/deleteUser/{userId}")
+    @Path("/deleteUser/")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response delete(@PathParam("userId") long id) {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response delete(User response) {
         try {
-            User user = userRepository.findByUserId(id);
-            if (user != null){
+            User user = userRepository.findByUserName(response.getUserName());
+            if (user != null) {
                 userRepository.delete(user);
                 return Response.ok().build();
-            }else {
+            } else {
                 return Response.status(BAD_REQUEST).entity("Cant find UserId").build();
             }
         } catch (RuntimeException e) {
@@ -73,30 +84,15 @@ public class UserResource {
         }
     }
 
-    @GET
-    @Path("/findUserByName/{userName}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response findUserByName(@PathParam("userName") String userName) {
-        try {
-            User user = userRepository.findUserByUserName(userName);
-            if (user != null) {
-                return Response.ok(user).build();
-            } else {
-                return Response.status(BAD_REQUEST).entity("User not Found").build();
-            }
-        } catch (RuntimeException e) {
-            return Response.serverError().entity("Error occurred: " + e).build();
-        }
-    }
-
     @POST
-    @Path("/updateUserPassword/{userName}.{newPassword}")
+    @Path("/updateUserPassword/")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response updateUserPassword(@PathParam("userName") String userName, @PathParam("newPassword") String newPassword) {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateUserPassword(User response) {
         try {
-            User user = userRepository.findByUserName(userName);
+            User user = userRepository.findByUserName(response.getUserName());
             if (user != null) {
-                user.setPassword(newPassword);
+                user.setEncodedPassword(passwordEncoder.encode(response.getEncodedPassword()));
                 userRepository.save(user);
                 return Response.ok(user).build();
             } else {
