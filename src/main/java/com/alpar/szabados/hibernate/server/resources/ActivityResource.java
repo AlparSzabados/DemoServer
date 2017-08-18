@@ -16,7 +16,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 import static java.time.format.DateTimeFormatter.ISO_DATE;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
@@ -34,7 +33,7 @@ public class ActivityResource {
     }
 
     @POST
-    @Path("findActivities/")
+    @Path("/findActivities/")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response findActivities(User response) {
@@ -52,7 +51,7 @@ public class ActivityResource {
     }
 
     @POST
-    @Path("createActivity/")
+    @Path("/createActivity/")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createActivity(UserAndActivityWrapper wrapper) {
@@ -65,11 +64,7 @@ public class ActivityResource {
             activity.setTaskStatus(activityResponse.getTaskStatus());
 
             activityRepository.save(activity);
-            if (Objects.equals(activity, activityRepository.save(activity))) {
-                return Response.ok(activity).build();
-            } else {
-                return Response.status(314).build(); // TODO
-            }
+            return Response.ok(activity).build();
         } catch (RuntimeException e) {
             return Response.serverError().entity("Error creating activity" + e).build();
         }
