@@ -5,9 +5,6 @@ import java.io.Serializable;
 
 @XmlRootElement
 public class UserAndActivityWrapper implements Serializable{
-
-    private static final long serialVersionUID = -3539523753863844554L;
-
     private User user;
     private Activity activity;
 

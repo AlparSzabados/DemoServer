@@ -8,7 +8,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
-@ComponentScan({"com.alpar.szabados.hibernate"})
+@ComponentScan("com.alpar.szabados.hibernate")
 public class ServerApplication {
     public static void main(String... args) {
         SpringApplication.run(ServerApplication.class, args);

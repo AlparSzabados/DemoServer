@@ -6,9 +6,7 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "activity")
-public class Activity implements Serializable{
-
-    private static final long serialVersionUID = 6812998521796773053L;
+public class Activity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "activity_id", nullable = false, unique = true)
@@ -26,14 +24,18 @@ public class Activity implements Serializable{
     @Column(name = "task_status")
     private TaskStatus taskStatus;
 
+    public Activity() {
+    }
+
+    public Activity(String activityName) {
+        this.activityName = activityName;
+    }
+
     public Activity(Long userId, String activityName, String activityDate, TaskStatus taskStatus) {
         this.userId = userId;
         this.activityName = activityName;
         this.activityDate = activityDate;
         this.taskStatus = taskStatus;
-    }
-
-    public Activity() {
     }
 
     public Long getId() {

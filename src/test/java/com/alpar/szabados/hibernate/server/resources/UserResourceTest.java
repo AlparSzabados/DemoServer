@@ -22,38 +22,36 @@ import static org.junit.Assert.assertEquals;
 @Component
 @RunWith(SpringRunner.class)
 public class UserResourceTest {
+    private static final PasswordEncoder ENCODER = new BCryptPasswordEncoder();
+
     @Autowired
     private UserRepository userRepository;
     private UserResource userResource;
 
     private User dummyUser;
 
-    private final PasswordEncoder encoder = new BCryptPasswordEncoder();
-
     @Before
     public void setUp() throws Exception {
-        userResource = new UserResource(userRepository, encoder);
-        dummyUser = new User("Dummy", encoder.encode("Password"));
+        userResource = new UserResource(userRepository, ENCODER);
+        dummyUser = new User("UserName", ENCODER.encode("Password"));
         userRepository.save(dummyUser);
     }
 
     @Test
     public void validate() {
-        dummyUser = new User("Dummy", "Password");
-
         Response validResponse = userResource.validate(dummyUser);
         assertEquals(200, validResponse.getStatus());
 
-        Response notValidPasswordResponse = userResource.validate(new User("Dummy", "abcde"));
+        Response notValidPasswordResponse = userResource.validate(new User("UserName", ENCODER.encode("Invalid Password")));
         assertEquals(400, notValidPasswordResponse.getStatus());
 
-        Response notValidUserNameResponse = userResource.validate(new User("John_Doe", "121441"));
+        Response notValidUserNameResponse = userResource.validate(new User("Invalid User", ENCODER.encode("Password")));
         assertEquals(500, notValidUserNameResponse.getStatus());
     }
 
     @Test
     public void create() {
-        Response createResponse = userResource.create(new User("John_Doe", "Password"));
+        Response createResponse = userResource.create(new User("NewUser", ENCODER.encode("Password")));
         assertEquals(200, createResponse.getStatus());
 
         Response duplicateResponse = userResource.create(dummyUser);
@@ -65,18 +63,21 @@ public class UserResourceTest {
         Response deleteResponse = userResource.delete(dummyUser);
         assertEquals(200, deleteResponse.getStatus());
 
-        Response cantDeleteResponse = userResource.delete(new User("Jane Doe", "Password"));
+        Response cantDeleteResponse = userResource.delete(new User("Invalid User", ENCODER.encode("Password")));
         assertEquals(400, cantDeleteResponse.getStatus());
     }
 
     @Test
     public void updateUserPassword() {
-        dummyUser.setEncodedPassword("12345");
-        Response updatePasswordResponse = userResource.updateUserPassword(dummyUser);
-        assertEquals(200, updatePasswordResponse.getStatus());
-        assertEquals(200, userResource.validate(new User("Dummy", "12345")).getStatus());
+        String encodedPassword = ENCODER.encode("New Password");
 
-        Response userNotFoundResponse = userResource.updateUserPassword(new User("John_Doe", "12345"));
+        dummyUser.setEncodedPassword(encodedPassword);
+        Response updatePasswordResponse = userResource.updateUserPassword(dummyUser);
+
+        assertEquals(200, updatePasswordResponse.getStatus());
+        assertEquals(200, userResource.validate(new User(dummyUser.getUserName(), encodedPassword)).getStatus());
+
+        Response userNotFoundResponse = userResource.updateUserPassword(new User("Invalid User", encodedPassword));
         assertEquals(400, userNotFoundResponse.getStatus());
     }
 }

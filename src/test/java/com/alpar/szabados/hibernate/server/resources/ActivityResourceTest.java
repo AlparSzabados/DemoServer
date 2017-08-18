@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.transaction.Transactional;
@@ -22,9 +23,10 @@ import java.time.format.DateTimeFormatter;
 import static com.alpar.szabados.hibernate.server.entities.TaskStatus.NOT_COMPLETED;
 import static org.junit.Assert.assertEquals;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest
 @Transactional
+@Component
+@RunWith(SpringRunner.class)
 public class ActivityResourceTest {
     @Autowired
     private ActivityRepository activityRepository;
@@ -37,23 +39,18 @@ public class ActivityResourceTest {
     private Activity dummyActivity;
 
     private static final String NOW = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE);
+    private static final PasswordEncoder ENCODER = new BCryptPasswordEncoder();
 
     @Before
     public void setUp() throws Exception {
         activityResource = new ActivityResource(activityRepository, userRepository);
 
-        PasswordEncoder encoder = new BCryptPasswordEncoder();
-        dummyUser = new User("Dummy", encoder.encode("Password"));
+        dummyUser = new User("UserName", ENCODER.encode("Password"));
         userRepository.save(dummyUser);
 
         long dummyUserId = userRepository.findUserByUserName(dummyUser.getUserName()).getUserId();
 
-        dummyActivity = new Activity();
-        dummyActivity.setActivityName("Swimming");
-        dummyActivity.setActivityDate(NOW);
-        dummyActivity.setUserId(dummyUserId);
-        dummyActivity.setTaskStatus(NOT_COMPLETED);
-
+        dummyActivity = new Activity(dummyUserId, "Dummy Activity", NOW, NOT_COMPLETED);
         activityRepository.save(dummyActivity);
     }
 
@@ -62,29 +59,22 @@ public class ActivityResourceTest {
         Response foundResponse = activityResource.findActivities(dummyUser);
         assertEquals(200, foundResponse.getStatus());
 
-        User newUser = userRepository.save(new User("Jane_Doe", "Password"));
+        User newUser = userRepository.save(new User("New User", ENCODER.encode("Password")));
 
         Response notFoundResponse = activityResource.findActivities(newUser);
         assertEquals(400, notFoundResponse.getStatus());
 
-        Response errorResponse = activityResource.findActivities(new User("John Doe", "qr2q"));
+        Response errorResponse = activityResource.findActivities(new User("Invalid User", ENCODER.encode("Password")));
         assertEquals(500, errorResponse.getStatus());
     }
 
     @Test
     public void createActivity() {
-        Activity newActivity = new Activity();
-        newActivity.setActivityName("reading");
-        UserAndActivityWrapper wrapper = new UserAndActivityWrapper(dummyUser, newActivity);
+        UserAndActivityWrapper wrapper = new UserAndActivityWrapper(dummyUser, new Activity("Dummy Activity"));
+        assertEquals(200, activityResource.createActivity(wrapper).getStatus());
 
-        Response successResponse = activityResource.createActivity(wrapper);
-        assertEquals(200, successResponse.getStatus());
-
-        User newUser = new User();
-        newUser.setUserName("John Doe");
         wrapper.setActivity(dummyActivity);
-        wrapper.setUser(newUser);
-        Response failResponse = activityResource.createActivity(wrapper);
-        assertEquals(500, failResponse.getStatus());
+        wrapper.setUser(new User("Invalid User"));
+        assertEquals(500, activityResource.createActivity(wrapper).getStatus());
     }
 }

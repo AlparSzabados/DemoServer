@@ -44,7 +44,7 @@ public class UserResource {
 
     private boolean isValid(User response, User user) {
         return Objects.equals(user.getUserName(), response.getUserName())
-                && passwordEncoder.matches(response.getEncodedPassword(), user.getEncodedPassword());
+                && Objects.equals(user.getEncodedPassword(), response.getEncodedPassword());
     }
 
     @PUT
@@ -55,7 +55,7 @@ public class UserResource {
         try {
             User existingUser = userRepository.findUserByUserName(response.getUserName());
             if (existingUser == null) {
-                User newUser = new User(response.getUserName(), passwordEncoder.encode(response.getEncodedPassword()));
+                User newUser = new User(response.getUserName(), response.getEncodedPassword());
                 userRepository.save(newUser);
                 return Response.ok(newUser).build();
             } else {
@@ -92,7 +92,7 @@ public class UserResource {
         try {
             User user = userRepository.findByUserName(response.getUserName());
             if (user != null) {
-                user.setEncodedPassword(passwordEncoder.encode(response.getEncodedPassword()));
+                user.setEncodedPassword(response.getEncodedPassword());
                 userRepository.save(user);
                 return Response.ok(user).build();
             } else {
