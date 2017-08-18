@@ -1,28 +1,29 @@
 package com.alpar.szabados.hibernate.server.resources;
 
 import com.alpar.szabados.hibernate.server.entities.Activity;
-import com.alpar.szabados.hibernate.server.entities.TaskStatus;
+import com.alpar.szabados.hibernate.server.entities.User;
+import com.alpar.szabados.hibernate.server.entities.UserAndActivityWrapper;
 import com.alpar.szabados.hibernate.server.repositories.ActivityRepository;
 import com.alpar.szabados.hibernate.server.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
-import static com.alpar.szabados.hibernate.server.entities.TaskStatus.COMPLETED;
-import static com.alpar.szabados.hibernate.server.entities.TaskStatus.NOT_COMPLETED;
 import static java.time.format.DateTimeFormatter.ISO_DATE;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 
 @Component
 @Path("/activity")
 public class ActivityResource {
-    private final String now = LocalDateTime.now().format(ISO_DATE);
-
     private final ActivityRepository activityRepository;
     private final UserRepository userRepository;
 
@@ -32,60 +33,60 @@ public class ActivityResource {
         this.userRepository = userRepository;
     }
 
-    @GET
-    @Path("/findActivities/{userName}")
+    @POST
+    @Path("findActivities/")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response findActivities(@PathParam("userName") String userName) {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response findActivities(User response) {
         try {
-            long userId = userRepository.findUserByUserName(userName).getUserId();
+            long userId = userRepository.findUserByUserName(response.getUserName()).getUserId();
             List<Activity> activityList = activityRepository.findActivitiesByUserId(userId);
-            if (activityList.isEmpty()) {
-                return Response.status(BAD_REQUEST).entity("Could not find any activities").build();
-            } else {
+            if (activityList.size() > 0) {
                 return Response.ok(activityList).build();
+            } else {
+                return Response.status(BAD_REQUEST).entity("Could not find any activities").build();
             }
         } catch (RuntimeException e) {
             return Response.serverError().entity("Error occurred" + e).build();
         }
     }
 
-    @PUT
-    @Path("/createActivity/{activityName}.{userName}")
+    @POST
+    @Path("createActivity/")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response createActivity(@PathParam("activityName") String activityName, @PathParam("userName") String userName) {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response createActivity(UserAndActivityWrapper wrapper) {
         try {
-            long userId = userRepository.findUserByUserName(userName).getUserId();
-            Activity activity = getActivity(activityName, userId, NOT_COMPLETED);
+            User userResponse = wrapper.getUser();
+            Activity activityResponse = wrapper.getActivity();
+            long userId = userRepository.findUserByUserName(userResponse.getUserName()).getUserId();
+
+            Activity activity = getOrCreateActivity(activityResponse.getActivityName(), userId, getCurrentTime());
+            activity.setTaskStatus(activityResponse.getTaskStatus());
+
             activityRepository.save(activity);
-            return Response.ok().build();
+            if (Objects.equals(activity, activityRepository.save(activity))) {
+                return Response.ok(activity).build();
+            } else {
+                return Response.status(314).build(); // TODO
+            }
         } catch (RuntimeException e) {
             return Response.serverError().entity("Error creating activity" + e).build();
         }
     }
 
-    @POST
-    @Path("/completeTask/{activityName}.{userName}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response completeTask(@PathParam("activityName") String activityName, @PathParam("userName") String userName) {
-        try {
-            long userId = userRepository.findUserByUserName(userName).getUserId();
-            Activity activity = getActivity(activityName, userId, COMPLETED);
-            activityRepository.save(activity);
-            return Response.ok().build();
-        } catch (RuntimeException e) {
-            return Response.serverError().entity("Error updating the activity: " + e).build();
-        }
-    }
-
-    private Activity getActivity(String activityName, long userId, TaskStatus taskStatus) {
+    private Activity getOrCreateActivity(String activityName, long userId, String now) {
         Activity activity = activityRepository.findActivityByActivityNameAndUserIdAndActivityDate(activityName, userId, now);
         if (activity == null) {
             activity = new Activity();
             activity.setActivityName(activityName);
             activity.setUserId(userId);
             activity.setActivityDate(now);
-            activity.setTaskStatus(taskStatus);
         }
         return activity;
+    }
+
+    private static String getCurrentTime() {
+        return LocalDateTime.now().format(ISO_DATE);
     }
 }
