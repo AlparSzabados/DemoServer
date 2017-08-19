@@ -32,21 +32,21 @@ public class UserResourceTest {
 
     @Before
     public void setUp() throws Exception {
-        userResource = new UserResource(userRepository, ENCODER);
+        userResource = new UserResource(userRepository);
         dummyUser = new User("UserName", ENCODER.encode("Password"));
         userRepository.save(dummyUser);
     }
 
     @Test
     public void validate() {
-        Response validResponse = userResource.validate(dummyUser);
+        Response validResponse = userResource.validate(new User("UserName", "Password"));
         assertEquals(200, validResponse.getStatus());
 
         Response notValidPasswordResponse = userResource.validate(new User("UserName", ENCODER.encode("Invalid Password")));
-        assertEquals(400, notValidPasswordResponse.getStatus());
+        assertEquals(401, notValidPasswordResponse.getStatus());
 
         Response notValidUserNameResponse = userResource.validate(new User("Invalid User", ENCODER.encode("Password")));
-        assertEquals(500, notValidUserNameResponse.getStatus());
+        assertEquals(400, notValidUserNameResponse.getStatus());
     }
 
     @Test
@@ -71,11 +71,11 @@ public class UserResourceTest {
     public void updateUserPassword() {
         String encodedPassword = ENCODER.encode("New Password");
 
-        dummyUser.setEncodedPassword(encodedPassword);
+        dummyUser.setPassword(encodedPassword);
         Response updatePasswordResponse = userResource.updateUserPassword(dummyUser);
 
         assertEquals(200, updatePasswordResponse.getStatus());
-        assertEquals(200, userResource.validate(new User(dummyUser.getUserName(), encodedPassword)).getStatus());
+        assertEquals(200, userResource.validate(new User("UserName", "New Password")).getStatus());
 
         Response userNotFoundResponse = userResource.updateUserPassword(new User("Invalid User", encodedPassword));
         assertEquals(400, userNotFoundResponse.getStatus());

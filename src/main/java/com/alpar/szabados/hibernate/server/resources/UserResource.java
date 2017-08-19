@@ -18,12 +18,11 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 @Path("/user")
 public class UserResource {
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private static final PasswordEncoder ENCODER = new BCryptPasswordEncoder();
 
     @Autowired
-    public UserResource(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserResource(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @POST
@@ -45,7 +44,7 @@ public class UserResource {
 
     private boolean isValid(User response, User user) {
         return Objects.equals(user.getUserName(), response.getUserName())
-                && Objects.equals(user.getPassword(), response.getPassword());
+                && ENCODER.matches(response.getPassword(), user.getPassword());
     }
 
     @PUT
