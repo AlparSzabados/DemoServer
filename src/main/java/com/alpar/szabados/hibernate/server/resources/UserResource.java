@@ -3,6 +3,7 @@ package com.alpar.szabados.hibernate.server.resources;
 import com.alpar.szabados.hibernate.server.entities.User;
 import com.alpar.szabados.hibernate.server.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -44,7 +45,7 @@ public class UserResource {
 
     private boolean isValid(User response, User user) {
         return Objects.equals(user.getUserName(), response.getUserName())
-                && Objects.equals(user.getEncodedPassword(), response.getEncodedPassword());
+                && Objects.equals(user.getPassword(), response.getPassword());
     }
 
     @PUT
@@ -55,7 +56,7 @@ public class UserResource {
         try {
             User existingUser = userRepository.findUserByUserName(response.getUserName());
             if (existingUser == null) {
-                User newUser = new User(response.getUserName(), response.getEncodedPassword());
+                User newUser = new User(response.getUserName(), response.getPassword());
                 userRepository.save(newUser);
                 return Response.ok(newUser).build();
             } else {
@@ -92,7 +93,7 @@ public class UserResource {
         try {
             User user = userRepository.findByUserName(response.getUserName());
             if (user != null) {
-                user.setEncodedPassword(response.getEncodedPassword());
+                user.setPassword(response.getPassword());
                 userRepository.save(user);
                 return Response.ok(user).build();
             } else {

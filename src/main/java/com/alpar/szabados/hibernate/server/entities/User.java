@@ -16,7 +16,7 @@ public class User implements Serializable {
     private String userName;
 
     @Column(name = "encoded_password")
-    private String encodedPassword;
+    private String password;
 
     public User() {
     }
@@ -25,9 +25,9 @@ public class User implements Serializable {
         this.userName = userName;
     }
 
-    public User(String userName, String encodedPassword) {
+    public User(String userName, String password) {
         this.userName = userName;
-        this.encodedPassword = encodedPassword;
+        this.password = password;
     }
 
     public long getUserId() {
@@ -46,17 +46,17 @@ public class User implements Serializable {
         this.userName = userName;
     }
 
-    public String getEncodedPassword() {
-        return encodedPassword;
+    public String getPassword() {
+        return password;
     }
 
-    public void setEncodedPassword(String encodedPassword) {
-        this.encodedPassword = encodedPassword;
+    public void setPassword(String encodedPassword) {
+        this.password = encodedPassword;
     }
 
     @Override
     public String toString() {
-        return String.format("User{userId=%d, userName='%s', encodedPassword='%s'}", userId, userName, encodedPassword);
+        return String.format("User{userId=%d, userName='%s', password='%s'}", userId, userName, password);
     }
 
     @Override
@@ -66,11 +66,11 @@ public class User implements Serializable {
         User user = (User) o;
         return userId == user.userId &&
                 Objects.equals(userName, user.userName) &&
-                Objects.equals(encodedPassword, user.encodedPassword);
+                Objects.equals(password, user.password);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userId, userName, encodedPassword);
+        return Objects.hash(userId, userName, password);
     }
 }
