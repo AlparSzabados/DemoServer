@@ -71,10 +71,10 @@ public class ActivityResourceTest {
     @Test
     public void createActivity() {
         UserAndActivityWrapper wrapper = new UserAndActivityWrapper(dummyUser, new Activity("Dummy Activity"));
-        assertEquals(200, activityResource.createActivity(wrapper).getStatus());
+        assertEquals(200, activityResource.createOrUpdateActivity(wrapper).getStatus());
 
         wrapper.setActivity(dummyActivity);
         wrapper.setUser(new User("Invalid User"));
-        assertEquals(500, activityResource.createActivity(wrapper).getStatus());
+        assertEquals(500, activityResource.createOrUpdateActivity(wrapper).getStatus());
     }
 }

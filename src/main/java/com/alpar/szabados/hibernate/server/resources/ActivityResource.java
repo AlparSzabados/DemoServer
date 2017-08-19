@@ -51,10 +51,10 @@ public class ActivityResource {
     }
 
     @POST
-    @Path("/createActivity/")
+    @Path("/createOrUpdateActivity/")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response createActivity(UserAndActivityWrapper wrapper) {
+    public Response createOrUpdateActivity(UserAndActivityWrapper wrapper) {
         try {
             User userResponse = wrapper.getUser();
             Activity activityResponse = wrapper.getActivity();
