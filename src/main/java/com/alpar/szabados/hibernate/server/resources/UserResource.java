@@ -13,6 +13,7 @@ import javax.ws.rs.core.Response;
 import java.util.Objects;
 
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 @Component
 @Path("/user")
@@ -32,13 +33,15 @@ public class UserResource {
     public Response validate(User response) {
         try {
             User user = userRepository.findByUserName(response.getUserName());
-            if (isValid(response, user)) {
-                return Response.ok(user).build();
+            if (user == null) {
+                return Response.status(BAD_REQUEST).entity("USER NOT FOUND").build();
+            } else if (!isValid(response, user)) {
+                return Response.status(UNAUTHORIZED).entity("WRONG PASSWORD").build();
             } else {
-                return Response.status(BAD_REQUEST).entity("Wrong password").build();
+                return Response.ok().build();
             }
         } catch (RuntimeException e) {
-            return Response.serverError().entity("Could not find user" + e).build();
+            return Response.serverError().entity("SERVER ERROR OCCURRED " + e).build();
         }
     }
 
@@ -54,15 +57,16 @@ public class UserResource {
     public Response create(User response) {
         try {
             User existingUser = userRepository.findUserByUserName(response.getUserName());
-            if (existingUser == null) {
-                User newUser = new User(response.getUserName(), response.getPassword());
-                userRepository.save(newUser);
-                return Response.ok(newUser).build();
+            if (existingUser != null) {
+                return Response.status(BAD_REQUEST).entity("USER ALREADY EXISTS").build();
+            } else if (response.getPassword().isEmpty()) {
+                return Response.status(UNAUTHORIZED).entity("INVALID PASSWORD").build();
             } else {
-                return Response.status(BAD_REQUEST).entity("User already created").build();
+                userRepository.save(response);
+                return Response.ok().build();
             }
         } catch (RuntimeException e) {
-            return Response.serverError().entity("Error occurred" + e).build();
+            return Response.serverError().entity("SERVER ERROR OCCURRED " + e).build();
         }
     }
 
@@ -73,14 +77,16 @@ public class UserResource {
     public Response delete(User response) {
         try {
             User user = userRepository.findByUserName(response.getUserName());
-            if (user != null) {
+            if (user == null) {
+                return Response.status(BAD_REQUEST).entity("USERNAME DOES NOT MATCH").build();
+            } else if (!isValid(response, user)) {
+                return Response.status(UNAUTHORIZED).entity("INVALID PASSWORD").build();
+            } else {
                 userRepository.delete(user);
                 return Response.ok().build();
-            } else {
-                return Response.status(BAD_REQUEST).entity("Cant find UserId").build();
             }
         } catch (RuntimeException e) {
-            return Response.serverError().entity("Error deleting the user: " + e).build();
+            return Response.serverError().entity("SERVER ERROR OCCURRED " + e).build();
         }
     }
 
@@ -91,15 +97,17 @@ public class UserResource {
     public Response updateUserPassword(User response) {
         try {
             User user = userRepository.findByUserName(response.getUserName());
-            if (user != null) {
+            if (user == null) {
+                return Response.status(BAD_REQUEST).entity("USER NOT FOUND").build();
+            } else if (!isValid(response, user)){
+                return Response.status(UNAUTHORIZED).entity("INVALID PASSWORD").build();
+            } else {
                 user.setPassword(response.getPassword());
                 userRepository.save(user);
                 return Response.ok(user).build();
-            } else {
-                return Response.status(BAD_REQUEST).entity("User not Found").build();
             }
         } catch (RuntimeException e) {
-            return Response.serverError().entity("Error occurred: " + e).build();
+            return Response.serverError().entity("SERVER ERROR OCCURRED " + e).build();
         }
     }
 }
