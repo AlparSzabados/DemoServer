@@ -4,7 +4,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 
 @XmlRootElement
-public class UserAndActivityWrapper implements Serializable{
+public class UserAndActivityWrapper implements Serializable {
     private User user;
     private Activity activity;
 
