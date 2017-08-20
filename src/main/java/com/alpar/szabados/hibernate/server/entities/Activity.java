@@ -15,7 +15,7 @@ public class Activity implements Serializable {
     @Column(name = "user_id", nullable = false)
     private long userId;
 
-    @Column(name = "activity_name")
+    @Column(name = "activity_name", nullable = false)
     private String activityName;
 
     @Column(name = "activity_date")

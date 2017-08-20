@@ -15,7 +15,7 @@ public class User implements Serializable {
     @Column(name = "user_name", nullable = false, unique = true)
     private String userName;
 
-    @Column(name = "encoded_password")
+    @Column(name = "encoded_password", nullable = false)
     private String password;
 
     public User() {
