@@ -8,10 +8,7 @@ import com.alpar.szabados.hibernate.server.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.time.LocalDateTime;
@@ -36,17 +33,21 @@ public class ActivityResource {
     @Path("/findActivities/")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response findActivities(User response) {
+    public Response findActivities(User user) {
         try {
-            long userId = userRepository.findUserByUserName(response.getUserName()).getUserId();
-            List<Activity> activityList = activityRepository.findActivitiesByUserId(userId);
-            if (activityList.size() > 0) {
-                return Response.ok(activityList).build();
+            User existingUser = userRepository.findByUserName(user.getUserName());
+            if (existingUser == null) {
+                return Response.status(BAD_REQUEST).entity("USER NOT FOUND").build();
             } else {
-                return Response.status(BAD_REQUEST).entity("Could not find any activities").build();
+                List<Activity> activityList = activityRepository.findActivitiesByUserId(existingUser.getUserId());
+                if (activityList.isEmpty()) {
+                    return Response.status(BAD_REQUEST).entity("ACTIVITIES NOT FOUND").build();
+                } else {
+                    return Response.ok(activityList).build();
+                }
             }
         } catch (RuntimeException e) {
-            return Response.serverError().entity("Error occurred" + e).build();
+            return Response.serverError().entity("SERVER ERROR OCCURRED " + e).build();
         }
     }
 
@@ -58,15 +59,19 @@ public class ActivityResource {
         try {
             User userResponse = wrapper.getUser();
             Activity activityResponse = wrapper.getActivity();
-            long userId = userRepository.findUserByUserName(userResponse.getUserName()).getUserId();
 
-            Activity activity = getOrCreateActivity(activityResponse.getActivityName(), userId, getCurrentTime());
-            activity.setTaskStatus(activityResponse.getTaskStatus());
+            User existingUser = userRepository.findByUserName(userResponse.getUserName());
+            if (existingUser == null) {
+                return Response.status(BAD_REQUEST).entity("USER NOT FOUND").build();
+            } else {
+                Activity activity = getOrCreateActivity(activityResponse.getActivityName(), existingUser.getUserId(), getCurrentTime());
+                activity.setTaskStatus(activityResponse.getTaskStatus());
 
-            activityRepository.save(activity);
-            return Response.ok(activity).build();
+                activityRepository.save(activity);
+                return Response.ok().build();
+            }
         } catch (RuntimeException e) {
-            return Response.serverError().entity("Error creating activity" + e).build();
+            return Response.serverError().entity("SERVER ERROR OCCURRED " + e).build();
         }
     }
 
@@ -79,6 +84,23 @@ public class ActivityResource {
             activity.setActivityDate(now);
         }
         return activity;
+    }
+
+    @DELETE
+    @Path("/deleteUserActivities/")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response deleteUserActivities(User user) {
+        try {
+            long userId = userRepository.findByUserName(user.getUserName()).getUserId();
+            List<Activity> activities = activityRepository.findActivitiesByUserId(userId);
+            if (activities.size() > 0) {
+                activityRepository.delete(activities);
+            }
+            return Response.ok().build();
+        } catch (RuntimeException e) {
+            return Response.serverError().entity("SERVER ERROR OCCURRED " + e).build();
+        }
     }
 
     private static String getCurrentTime() {

@@ -48,7 +48,7 @@ public class ActivityResourceTest {
         dummyUser = new User("UserName", ENCODER.encode("Password"));
         userRepository.save(dummyUser);
 
-        long dummyUserId = userRepository.findUserByUserName(dummyUser.getUserName()).getUserId();
+        long dummyUserId = userRepository.findByUserName(dummyUser.getUserName()).getUserId();
 
         dummyActivity = new Activity(dummyUserId, "Dummy Activity", NOW, NOT_COMPLETED);
         activityRepository.save(dummyActivity);
@@ -75,6 +75,11 @@ public class ActivityResourceTest {
 
         wrapper.setActivity(dummyActivity);
         wrapper.setUser(new User("Invalid User"));
-        assertEquals(500, activityResource.createOrUpdateActivity(wrapper).getStatus());
+        assertEquals(400, activityResource.createOrUpdateActivity(wrapper).getStatus());
+    }
+
+    @Test
+    public void deleteActivity() {
+        assertEquals(200, activityResource.deleteUserActivities(dummyUser).getStatus());
     }
 }
