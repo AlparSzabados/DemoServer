@@ -72,10 +72,15 @@ public class UserResource {
     @Path("/deleteUser/")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response delete(User response) {
+    public Response delete(User user) {
         try {
-            userRepository.delete(userRepository.findByUserName(response.getUserName()));
-            return Response.ok().build();
+            User existingUser = userRepository.findByUserName(user.getUserName());
+            if (existingUser == null) {
+                return Response.status(BAD_REQUEST).entity("USER NOT FOUND").build();
+            } else {
+                userRepository.delete(userRepository.findByUserName(user.getUserName()));
+                return Response.ok().build();
+            }
         } catch (RuntimeException e) {
             return Response.serverError().entity("SERVER ERROR OCCURRED " + e).build();
         }

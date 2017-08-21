@@ -40,31 +40,31 @@ public class UserResourceTest {
     @Test
     public void validate() {
         Response validResponse = userResource.validate(new User("UserName", "Password"));
-        assertEquals(200, validResponse.getStatus());
+        assertEquals(getMessage(validResponse), 200, validResponse.getStatus());
 
         Response notValidPasswordResponse = userResource.validate(new User("UserName", ENCODER.encode("Invalid Password")));
-        assertEquals(401, notValidPasswordResponse.getStatus());
+        assertEquals(getMessage(notValidPasswordResponse), 401, notValidPasswordResponse.getStatus());
 
         Response notValidUserNameResponse = userResource.validate(new User("Invalid User", ENCODER.encode("Password")));
-        assertEquals(400, notValidUserNameResponse.getStatus());
+        assertEquals(getMessage(notValidUserNameResponse), 400, notValidUserNameResponse.getStatus());
     }
 
     @Test
     public void create() {
         Response createResponse = userResource.create(new User("NewUser", ENCODER.encode("Password")));
-        assertEquals(200, createResponse.getStatus());
+        assertEquals(getMessage(createResponse), 200, createResponse.getStatus());
 
         Response duplicateResponse = userResource.create(dummyUser);
-        assertEquals(400, duplicateResponse.getStatus());
+        assertEquals(getMessage(duplicateResponse), 400, duplicateResponse.getStatus());
     }
 
     @Test
     public void delete() {
         Response deleteResponse = userResource.delete(dummyUser);
-        assertEquals(200, deleteResponse.getStatus());
+        assertEquals(getMessage(deleteResponse), 200, deleteResponse.getStatus());
 
         Response cantDeleteResponse = userResource.delete(new User("Invalid User", ENCODER.encode("Password")));
-        assertEquals(400, cantDeleteResponse.getStatus());
+        assertEquals(getMessage(cantDeleteResponse), 400, cantDeleteResponse.getStatus());
     }
 
     @Test
@@ -74,10 +74,16 @@ public class UserResourceTest {
         dummyUser.setPassword(encodedPassword);
         Response updatePasswordResponse = userResource.updateUserPassword(dummyUser);
 
-        assertEquals(200, updatePasswordResponse.getStatus());
-        assertEquals(200, userResource.validate(new User("UserName", "New Password")).getStatus());
+        assertEquals(getMessage(updatePasswordResponse), 200, updatePasswordResponse.getStatus());
+        assertEquals(getMessage(updatePasswordResponse), 200, userResource.validate(new User("UserName", "New Password")).getStatus());
 
         Response userNotFoundResponse = userResource.updateUserPassword(new User("Invalid User", encodedPassword));
-        assertEquals(400, userNotFoundResponse.getStatus());
+        assertEquals(getMessage(updatePasswordResponse), 400, userNotFoundResponse.getStatus());
+    }
+
+    private static String getMessage(Response validResponse) {
+        return (validResponse == null || validResponse.getEntity() == null)
+                ? ""
+                : validResponse.getEntity().toString();
     }
 }

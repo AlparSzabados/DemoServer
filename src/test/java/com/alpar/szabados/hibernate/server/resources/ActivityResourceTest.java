@@ -57,15 +57,15 @@ public class ActivityResourceTest {
     @Test
     public void findActivities() {
         Response foundResponse = activityResource.findActivities(dummyUser);
-        assertEquals(200, foundResponse.getStatus());
+        assertEquals(getMessage(foundResponse), 200, foundResponse.getStatus());
 
         User newUser = userRepository.save(new User("New User", ENCODER.encode("Password")));
 
         Response notFoundResponse = activityResource.findActivities(newUser);
-        assertEquals(400, notFoundResponse.getStatus());
+        assertEquals(getMessage(notFoundResponse), 400, notFoundResponse.getStatus());
 
         Response errorResponse = activityResource.findActivities(new User("Invalid User", ENCODER.encode("Password")));
-        assertEquals(400, errorResponse.getStatus());
+        assertEquals(getMessage(errorResponse), 400, errorResponse.getStatus());
     }
 
     @Test
@@ -81,5 +81,11 @@ public class ActivityResourceTest {
     @Test
     public void deleteActivity() {
         assertEquals(200, activityResource.deleteUserActivities(dummyUser).getStatus());
+    }
+
+    private static String getMessage(Response validResponse) {
+        return (validResponse == null || validResponse.getEntity() == null)
+                ? ""
+                : validResponse.getEntity().toString();
     }
 }
