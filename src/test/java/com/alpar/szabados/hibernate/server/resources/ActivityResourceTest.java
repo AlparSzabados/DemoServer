@@ -65,7 +65,7 @@ public class ActivityResourceTest {
         assertEquals(400, notFoundResponse.getStatus());
 
         Response errorResponse = activityResource.findActivities(new User("Invalid User", ENCODER.encode("Password")));
-        assertEquals(500, errorResponse.getStatus());
+        assertEquals(400, errorResponse.getStatus());
     }
 
     @Test
