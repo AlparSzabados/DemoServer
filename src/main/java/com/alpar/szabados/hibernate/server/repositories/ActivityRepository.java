@@ -7,5 +7,6 @@ import java.util.List;
 
 public interface ActivityRepository extends JpaRepository<Activity, Long> {
     List<Activity> findActivitiesByUserId(long userId);
+
     Activity findActivityByActivityNameAndUserIdAndActivityDate(String activityName, long userId, String date);
 }

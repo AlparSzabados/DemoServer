@@ -14,8 +14,9 @@ import javax.ws.rs.core.Response;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.alpar.szabados.hibernate.server.utils.ResponseFactory.*;
+import static com.alpar.szabados.hibernate.server.utils.Responses.*;
 import static java.time.format.DateTimeFormatter.ISO_DATE;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 
 @Component
 @Path("/activity")
@@ -36,18 +37,14 @@ public class ActivityResource {
     public Response findActivities(User user) {
         try {
             User existingUser = userRepository.findByUserName(user.getUserName());
-            if (existingUser == null) {
-                return Response.status(BAD_REQUEST).entity("USER NOT FOUND").build();
+            if (existingUser != null) {
+                List<Activity> activityList = getActivitiesByUserId(getUserId(user.getUserName()));
+                return responseOkAndEntity(OK, activityList);
             } else {
-                List<Activity> activityList = activityRepository.findActivitiesByUserId(existingUser.getUserId());
-                if (activityList.isEmpty()) {
-                    return Response.status(BAD_REQUEST).entity("ACTIVITIES NOT FOUND").build();
-                } else {
-                    return Response.ok(activityList).build();
-                }
+                return responseAndMessage(USER_NOT_FOUND);
             }
         } catch (RuntimeException e) {
-            return Response.serverError().entity("SERVER ERROR OCCURRED " + e).build();
+            return responseAndException(SERVER_ERROR, e);
         }
     }
 
@@ -57,33 +54,34 @@ public class ActivityResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createOrUpdateActivity(UserAndActivityWrapper wrapper) {
         try {
-            User userResponse = wrapper.getUser();
-            Activity activityResponse = wrapper.getActivity();
+            User user = wrapper.getUser();
+            Activity activity = wrapper.getActivity();
 
-            User existingUser = userRepository.findByUserName(userResponse.getUserName());
-            if (existingUser == null) {
-                return Response.status(BAD_REQUEST).entity("USER NOT FOUND").build();
+            User existingUser = userRepository.findByUserName(user.getUserName());
+            if (existingUser != null) {
+                Activity newActivity = getOrCreateActivity(activity, user);
+                newActivity.setTaskStatus(activity.getTaskStatus());
+
+                activityRepository.save(newActivity);
+                return responseOk();
             } else {
-                Activity activity = getOrCreateActivity(activityResponse.getActivityName(), existingUser.getUserId(), getCurrentTime());
-                activity.setTaskStatus(activityResponse.getTaskStatus());
-
-                activityRepository.save(activity);
-                return Response.ok().build();
+                return responseAndMessage(USER_NOT_FOUND);
             }
         } catch (RuntimeException e) {
-            return Response.serverError().entity("SERVER ERROR OCCURRED " + e).build();
+            return responseAndException(SERVER_ERROR, e);
         }
     }
 
-    private Activity getOrCreateActivity(String activityName, long userId, String now) {
-        Activity activity = activityRepository.findActivityByActivityNameAndUserIdAndActivityDate(activityName, userId, now);
-        if (activity == null) {
-            activity = new Activity();
-            activity.setActivityName(activityName);
-            activity.setUserId(userId);
-            activity.setActivityDate(now);
+    private Activity getOrCreateActivity(Activity activity, User user) {
+        String activityName = activity.getActivityName();
+        long userId = getUserId(user.getUserName());
+        String now = LocalDateTime.now().format(ISO_DATE);
+
+        Activity existingActivity = activityRepository.findActivityByActivityNameAndUserIdAndActivityDate(activityName, userId, now);
+        if (existingActivity == null) {
+            existingActivity = new Activity(userId, activityName, now, null);
         }
-        return activity;
+        return existingActivity;
     }
 
     @DELETE
@@ -92,18 +90,24 @@ public class ActivityResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response deleteUserActivities(User user) {
         try {
-            long userId = userRepository.findByUserName(user.getUserName()).getUserId();
-            List<Activity> activities = activityRepository.findActivitiesByUserId(userId);
-            if (activities.size() > 0) {
+            Response validate = new UserResource(userRepository).validate(user);
+            if (validate.getStatus() == 200) {
+                List<Activity> activities = getActivitiesByUserId(getUserId(user.getUserName()));
                 activityRepository.delete(activities);
+                return responseOk();
+            } else {
+                return validate;
             }
-            return Response.ok().build();
         } catch (RuntimeException e) {
-            return Response.serverError().entity("SERVER ERROR OCCURRED " + e).build();
+            return responseAndException(SERVER_ERROR, e);
         }
     }
 
-    private static String getCurrentTime() {
-        return LocalDateTime.now().format(ISO_DATE);
+    private List<Activity> getActivitiesByUserId(long id) {
+        return activityRepository.findActivitiesByUserId(id);
+    }
+
+    private long getUserId(String userName) {
+        return userRepository.findByUserName(userName).getUserId();
     }
 }

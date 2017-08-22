@@ -10,9 +10,10 @@ import org.springframework.stereotype.Component;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+import static com.alpar.szabados.hibernate.server.utils.ResponseFactory.*;
+import static com.alpar.szabados.hibernate.server.utils.Responses.*;
 
 @Component
 @Path("/user")
@@ -32,19 +33,21 @@ public class UserResource {
     public Response validate(User user) {
         try {
             User existingUser = userRepository.findByUserName(user.getUserName());
-            if (existingUser == null) {
-                return Response.status(BAD_REQUEST).entity("USER NOT FOUND").build();
-            } else if (!isValid(user, existingUser)) {
-                return Response.status(UNAUTHORIZED).entity("WRONG PASSWORD").build();
+            if (existingUser != null) {
+                if (isValid(user, existingUser)) {
+                    return responseOk();
+                } else {
+                    return responseAndMessage(WRONG_PASSWORD);
+                }
             } else {
-                return Response.ok().build();
+                return responseAndMessage(USER_NOT_FOUND);
             }
         } catch (RuntimeException e) {
-            return Response.serverError().entity("SERVER ERROR OCCURRED " + e).build();
+            return responseAndException(SERVER_ERROR, e);
         }
     }
 
-    private boolean isValid(User response, User user) {
+    public boolean isValid(User response, User user) {
         return ENCODER.matches(response.getPassword(), user.getPassword());
     }
 
@@ -55,16 +58,18 @@ public class UserResource {
     public Response create(User user) {
         try {
             User existingUser = userRepository.findByUserName(user.getUserName());
-            if (existingUser != null) {
-                return Response.status(BAD_REQUEST).entity("USER ALREADY EXISTS").build();
-            } else if (user.getPassword().isEmpty()) {
-                return Response.status(UNAUTHORIZED).entity("INVALID PASSWORD").build();
+            if (existingUser == null) {
+                if (user.getPassword() != null) {
+                    userRepository.save(user);
+                    return responseOk();
+                } else {
+                    return responseAndMessage(INVALID_PASSWORD);
+                }
             } else {
-                userRepository.save(user);
-                return Response.ok().build();
+                return responseAndMessage(USER_ALREADY_EXISTS);
             }
         } catch (RuntimeException e) {
-            return Response.serverError().entity("SERVER ERROR OCCURRED " + e).build();
+            return responseAndException(SERVER_ERROR, e);
         }
     }
 
@@ -74,16 +79,21 @@ public class UserResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response delete(User user) {
         try {
-            User existingUser = userRepository.findByUserName(user.getUserName());
-            if (existingUser == null) {
-                return Response.status(BAD_REQUEST).entity("USER NOT FOUND").build();
-            } else {
-                userRepository.delete(userRepository.findByUserName(user.getUserName()));
+            Response validate = validate(user);
+            if (isOk(validate.getStatus())) {
+                User existingUser = userRepository.findByUserName(user.getUserName());
+                userRepository.delete(existingUser);
                 return Response.ok().build();
+            } else {
+                return validate;
             }
         } catch (RuntimeException e) {
-            return Response.serverError().entity("SERVER ERROR OCCURRED " + e).build();
+            return responseAndException(SERVER_ERROR, e);
         }
+    }
+
+    private boolean isOk(int status) {
+        return status == Status.OK.getStatusCode();
     }
 
     @POST
@@ -93,15 +103,15 @@ public class UserResource {
     public Response updateUserPassword(User user) {
         try {
             User existingUser = userRepository.findByUserName(user.getUserName());
-            if (existingUser == null) {
-                return Response.status(BAD_REQUEST).entity("USER NOT FOUND").build();
-            } else {
+            if (existingUser != null) {
                 existingUser.setPassword(user.getPassword());
                 userRepository.save(existingUser);
-                return Response.ok(existingUser).build();
+                return Response.ok().build();
+            } else {
+                return responseAndMessage(USER_NOT_FOUND);
             }
         } catch (RuntimeException e) {
-            return Response.serverError().entity("SERVER ERROR OCCURRED " + e).build();
+            return responseAndException(SERVER_ERROR, e);
         }
     }
 }

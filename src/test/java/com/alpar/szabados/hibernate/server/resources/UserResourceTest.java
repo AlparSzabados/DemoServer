@@ -60,7 +60,7 @@ public class UserResourceTest {
 
     @Test
     public void delete() {
-        Response deleteResponse = userResource.delete(dummyUser);
+        Response deleteResponse = userResource.delete(new User("UserName", "Password"));
         assertEquals(getMessage(deleteResponse), 200, deleteResponse.getStatus());
 
         Response cantDeleteResponse = userResource.delete(new User("Invalid User", ENCODER.encode("Password")));

@@ -20,6 +20,7 @@ import javax.ws.rs.core.Response;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import static com.alpar.szabados.hibernate.server.entities.TaskStatus.COMPLETED;
 import static com.alpar.szabados.hibernate.server.entities.TaskStatus.NOT_COMPLETED;
 import static org.junit.Assert.assertEquals;
 
@@ -61,26 +62,36 @@ public class ActivityResourceTest {
 
         User newUser = userRepository.save(new User("New User", ENCODER.encode("Password")));
 
-        Response notFoundResponse = activityResource.findActivities(newUser);
-        assertEquals(getMessage(notFoundResponse), 400, notFoundResponse.getStatus());
+        Response noActivitiesResponse = activityResource.findActivities(newUser);
+        assertEquals(getMessage(noActivitiesResponse), 200, noActivitiesResponse.getStatus());
 
         Response errorResponse = activityResource.findActivities(new User("Invalid User", ENCODER.encode("Password")));
         assertEquals(getMessage(errorResponse), 400, errorResponse.getStatus());
     }
 
     @Test
-    public void createActivity() {
+    public void createOrUpdateActivity() {
         UserAndActivityWrapper wrapper = new UserAndActivityWrapper(dummyUser, new Activity("Dummy Activity"));
-        assertEquals(200, activityResource.createOrUpdateActivity(wrapper).getStatus());
+        Response createResponse = activityResource.createOrUpdateActivity(wrapper);
+        assertEquals(getMessage(createResponse), 200, createResponse.getStatus());
+
+        wrapper.setUser(dummyUser);
+        wrapper.setActivity(dummyActivity);
+        dummyActivity.setTaskStatus(COMPLETED);
+        Response updateResponse = activityResource.createOrUpdateActivity(wrapper);
+        assertEquals(getMessage(updateResponse), 200, updateResponse.getStatus());
 
         wrapper.setActivity(dummyActivity);
         wrapper.setUser(new User("Invalid User"));
-        assertEquals(400, activityResource.createOrUpdateActivity(wrapper).getStatus());
+        Response notFoundResponse = activityResource.createOrUpdateActivity(wrapper);
+        assertEquals(getMessage(notFoundResponse), 400, notFoundResponse.getStatus());
+
     }
 
     @Test
     public void deleteActivity() {
-        assertEquals(200, activityResource.deleteUserActivities(dummyUser).getStatus());
+        Response response = activityResource.deleteUserActivities(new User("UserName", "Password"));
+        assertEquals(getMessage(response), 200, response.getStatus());
     }
 
     private static String getMessage(Response validResponse) {
